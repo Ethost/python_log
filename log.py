@@ -39,23 +39,23 @@ def time(path):
 
 def goodprint(parsing):
     i=0
+    print("\n--START--")
     for i in range(5):
-        if i==0:
-            print("\n--START--")
-            severity="Severity: "+parsing[0]
-            print(severity)
-        elif i==1:
-            date="Date: "+parsing[1]
-            print(date)
-        elif i==2:
-            time="Time: "+parsing[2]
-            print(time)  
-        elif i==3:
-            host="Host: "+parsing[3]
-            print(host)
-        elif i==4:
-            msg="Message: "+parsing[4]
-            print(msg)  
+        severity="Severity: "+parsing[0]
+        date="Date: "+parsing[1]
+        time="Time: "+parsing[2]
+        host="Host: "+parsing[3]
+        msg="Message: "+parsing[4]
+
+        switcher = {
+                    0: severity,
+                    1: date,
+                    2: time,
+                    3: host,
+                    4: msg
+            }
+        print(switcher.get(i))
+
         i+=1
 
 def pathlog():
@@ -88,6 +88,7 @@ def main():
         print("\t\t |> 2. Afficher toutes les logs d'un appareils cisco.")
         print("\t\t |> 3. Afficher les logs d'une heure d'un appareils cisco.")
         print("\t\t |> 4. Sortir.")
+
         try:
             choose=int(input("\n\t\t -> "))
         except Exception as e:
