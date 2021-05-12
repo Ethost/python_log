@@ -1,20 +1,50 @@
+import mysql.connector 
+
+def connection_bdd():
+    i=0
+    while i<3:
+        try:
+            mdp=str(input("\n\t [+] Entrer le mot de passe de connexion à la base de donnée. ({} essai restant)\n\t\t>".format(3-i)))
+
+            mydb = mysql.connector.connect(
+            host="192.168.50.151",
+            user="ciscolog",
+            password=mdp,
+            database="customer",
+            auth_plugin="sha256_password"
+            )
+
+            return mydb
+        
+        except:
+            print("\n\t [!] Vous avez entré un mauvais mot de passe.\n")
+            if i==2:
+                exit()
+        
+        i+=1
+
 
 def listing():
     check=0
-    CUSTOMERCODE=input("\n\t [+] Entrer le customer code: \n\t\t> ")
+    customercode=input("\n\t [+] Entrer le customer code: \n\t\t> ")
+    
+    db=connection_bdd()
+    mycursor = db.cursor()
 
-    with open('host.txt', 'r') as fl:
-                for line in fl.readlines() :
-                        if CUSTOMERCODE in line:
-                            tmp=line.split("|")
-                            print("\n\t\t -",CUSTOMERCODE,':\n\t\t\t Nom:',tmp[1],'\n\t\t\t IP:',tmp[2])
-                            check=1
-                if check!=1:
-                    print("\n\t [!] Le customer code entré n'est pas dans la base de donnée.\n\t\t->", CUSTOMERCODE)
+    mycursor.execute("SELECT * FROM hosts")
+    myresult = mycursor.fetchall()
+
+    for x in myresult:
+        if customercode == x[1]:
+            print("\n\t\t -",x[1],':\n\t\t\t Nom:',x[2],'\n\t\t\t IP:',x[3])
+            check=1
+
+        if check != 1:
+            print("\n\t [!] Le customer code entré n'est pas dans la base de donnée.\n\t\t-> '{}'".format(x[1]))
 
 def repeat():
-    repeat=input("\n\t [+] Voulez-vous recommencer le script? (oui/non) \n\t\t>")
-    return repeat
+    REPEAT=input("\n\t [+] Voulez-vous recommencer le script? (oui/non) \n\t\t>")
+    return REPEAT
 
 def time(path):
     timechoose=[None]*2
@@ -35,7 +65,7 @@ def time(path):
                 if HOUR >= timechoose[1] and HOUR < timechoose[0]:
                     goodprint(parsing)
     except:
-        print("\n\t[!] Vous n'avez pas rentré un nombre.")
+        print("\n\t [!] Vous n'avez pas rentré un nombre.")
 
 def goodprint(parsing):
     i=0
@@ -61,22 +91,29 @@ def goodprint(parsing):
 def pathlog():
     check=0
     path=""
-    tmp=[]
-    CUSTOMERCODE=input("\n\t [+] Entrer le customer code: \n\t\t> ")
-    NAME=input("\n\t [+] Entrer le nom de l'appareil(RT1,SW1..): \n\t\t> ")
-    MOUNTH=input("\n\t [+] Entrer le mois des logs recherché (01,02..): \n\t\t> ")
-    DAY=input("\n\t [+] Entrer le jour des logs recherché (1,2..): \n\t\t> ")
+    customercode=input("\n\t [+] Entrer le customer code: \n\t\t> ")
+    name=input("\n\t [+] Entrer le nom de l'appareil(RT1,SW1..): \n\t\t> ")
+    date = input("\n\t [+] Entrer la date de logs recherché (02/19..): \n\t\t> ")
+    date = str(date)
+    liste = date.split("/")
+    month = liste[0]
+    day = liste[1]
 
-    with open('host.txt', 'r') as fl:                        
-        for line in fl.readlines() :                  
-                if CUSTOMERCODE in line:
-                    tmp=line.split("|")
-                    if tmp[1]==NAME:
-                        path="/var/log/cisco/" + tmp[2].rstrip('\n') + "/" + MOUNTH + "/" + DAY + "/compacte_cisco.log"
-                        check=1
+    db=connection_bdd()
+    mycursor = db.cursor()
+
+    mycursor.execute("SELECT * FROM hosts")
+    myresult = mycursor.fetchall()
+
+    for x in myresult:
+        if customercode == x[1]:
+            if name == x[2]:
+                path="/var/log/cisco/" + x[3] + "/" + month + "/" + day + "/compacte_cisco.log"
+                check=1
+
     if check!=1:
-        print("\n\t [!] Aucune donnée pour",CUSTOMERCODE,"à l'appareil",NAME,"en date du %s/%s" %(MOUNTH, DAY))
-
+        print("\n\t [!] Aucune donnée pour le client '{}' à l'appareil '{}' en date du {}/{}\n".format(customercode,name,month,day))
+        exit()
 
     return path
 
@@ -113,6 +150,7 @@ def main():
 
         elif choose==4:
             exit()
+            
         else:
             print("\t\n [!] Vous n'avez pas choisis l'une des options afficher.")
         
@@ -120,4 +158,5 @@ def main():
             main()
         else:
             exit()
+
 main()
